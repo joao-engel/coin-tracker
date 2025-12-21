@@ -1,11 +1,15 @@
-﻿namespace Core.Lib.DTOs;
+﻿using System.Globalization;
+
+namespace Core.Lib.DTOs;
 
 public class PriceUpdateDto
 {
-    public string Coin { get; set; }
-    public string RoutingKey { get; set; }
+    public string Coin { get; set; } = string.Empty;
+    public string RoutingKey { get; set; } = string.Empty;
     public decimal Price { get; set; }
     public DateTime Timestamp { get; set; }
+
+    public PriceUpdateDto() { }
 
     public PriceUpdateDto(string coin, string routingKey, decimal price)
     {
@@ -17,7 +21,7 @@ public class PriceUpdateDto
 
     public PriceUpdateDto(string coin, string routingKey, string price)
     {
-        if (!decimal.TryParse(price, out decimal parsedPrice))
+        if (!decimal.TryParse(price, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal parsedPrice))
             throw new ArgumentException("Formato do preço invalido", nameof(price));
 
         Coin = coin;

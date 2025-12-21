@@ -1,16 +1,64 @@
+using Core.Lib.Infra;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+using System.Text;
+using Worker.PriceProcessor.Services;
+
 namespace Worker.PriceProcessor;
 
-public class PriceWorker(ILogger<PriceWorker> logger) : BackgroundService
+public class PriceWorker(ILogger<PriceWorker> logger, RabbitMQService rabbitService, IConfiguration configuration, IServiceScopeFactory scopeFactory) : BackgroundService
 {
+    private IChannel? _channel;
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        var exchangeName = configuration["RabbitMQSettings:ExchangeName"]
+            ?? throw new Exception("ExchangeName is not configured");
+        var queueName = configuration["RabbitMQSettings:QueueName"]
+            ?? throw new Exception("QueueName is not configured");
+        var routingKey = configuration["RabbitMQSettings:RoutingKey"]
+            ?? throw new Exception("RoutingKey is not configured");
+
+        logger.LogInformation($"Iniciando Worker para Moeda: {routingKey} na Fila: {queueName}");
+
+        _channel = await rabbitService.SetupChannel(
+            exchangeName: exchangeName,
+            queueName: queueName,
+            routingKey: routingKey
+        );
+
+        var consumer = new AsyncEventingBasicConsumer(_channel);
+
+        consumer.ReceivedAsync += async (model, ea) =>
         {
-            if (logger.IsEnabled(LogLevel.Information))
+            var body = ea.Body.ToArray();
+            var message = Encoding.UTF8.GetString(body);
+
+            try
             {
-                logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                using (var scope = scopeFactory.CreateScope())
+                {
+                    var historyService = scope.ServiceProvider.GetRequiredService<MarketHistoryService>();
+
+                    await historyService.SavePrice(message);
+                }                    
+
+                await _channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false);
             }
-            await Task.Delay(1000, stoppingToken);
-        }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Erro ao processar.");
+            }
+        };
+
+        await _channel.BasicConsumeAsync(queue: queueName, autoAck: false, consumer: consumer, cancellationToken: stoppingToken);
+
+        await Task.Delay(Timeout.Infinite, stoppingToken);
+    }
+
+    public override void Dispose()
+    {
+        _channel?.Dispose();
+        base.Dispose();
     }
 }

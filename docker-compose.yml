@@ -77,6 +77,33 @@ services:
     depends_on:
       - redis
 
+  worker-crypto:
+    image: coin-worker-crypto
+    container_name: coin_worker_crypto
+    build:
+      context: .
+      dockerfile: src/Worker.Crypto/Dockerfile
+    env_file:
+      - common.env
+    depends_on:
+      - rabbitmq
+    networks:
+      - coin-net
+
+  worker-price:
+    image: coin-worker-price
+    container_name: coin_worker_price
+    build:
+      context: .
+      dockerfile: src/Worker.PriceProcessor/Dockerfile
+    env_file:
+      - common.env
+    depends_on:
+      - rabbitmq
+      - postgres
+    networks:
+      - coin-net
+
 volumes:
   postgres_data:
   mongo_data:

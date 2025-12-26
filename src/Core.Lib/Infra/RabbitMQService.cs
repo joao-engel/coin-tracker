@@ -24,7 +24,7 @@ public class RabbitMQService
 
         await channel.ExchangeDeclareAsync(
             exchange: exchangeName,
-            type: ExchangeType.Direct
+            type: ExchangeType.Topic
         );
 
         _logger.LogDebug($"Publicando: {jsonMessage}");
@@ -44,7 +44,7 @@ public class RabbitMQService
 
         var channel = await _conn.CreateChannelAsync();
 
-        await channel.ExchangeDeclareAsync(exchange: exchangeName, type: ExchangeType.Direct);
+        await channel.ExchangeDeclareAsync(exchange: exchangeName, type: ExchangeType.Topic);
 
         await channel.QueueDeclareAsync(
             queue: queueName,

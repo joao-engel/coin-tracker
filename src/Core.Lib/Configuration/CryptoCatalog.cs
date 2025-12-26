@@ -12,7 +12,9 @@ public static class CryptoCatalog
     [
         new("btc",  "BTCUSDT",  "Bitcoin"),
         new("eth",  "ETHUSDT",  "Ethereum"),
-        new("doge", "DOGEUSDT", "Dogecoin")
+        new("doge", "DOGEUSDT", "Dogecoin"),
+        new("sol",  "SOLUSDT",  "Solana"),
+        new("xrp",  "XRPUSDT",  "XRP")
     ];
 
     public static CryptoRecord? GetByRoutingKey(string key)

@@ -35,7 +35,7 @@ public class CryptoWorker : BackgroundService
                     await _rabbitMQService.PublishMessageAsync(
                         message: coin,
                         exchangeName: _exchangeName,
-                        routingKey: coin.RoutingKey
+                        routingKey: $"coin.{coin.RoutingKey}"
                     );
 
                     _logger.LogInformation($"[Publisher] Enviado: {coin.Coin} (${coin.Price:F2})");

@@ -22,8 +22,8 @@ namespace Core.Lib.Migrations
                     ID = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     Coin = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     Price = table.Column<decimal>(type: "numeric(18,8)", precision: 18, scale: 8, nullable: false),
-                    Timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ProcessedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Timestamp = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    ProcessedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {

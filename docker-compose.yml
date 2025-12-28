@@ -14,6 +14,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - coin-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d cointracker_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -26,6 +31,11 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
     networks:
       - coin-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:alpine
@@ -86,7 +96,8 @@ services:
     env_file:
       - common.env
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     networks:
       - coin-net
 
@@ -99,8 +110,61 @@ services:
     env_file:
       - common.env
     depends_on:
-      - rabbitmq
-      - postgres
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - coin-net
+
+  # api-analytics:
+  #   image: coin-api-analytics
+  #   container_name: coin_api_analytics
+  #   build:
+  #     context: .
+  #     dockerfile: src/Api.Analytics/Dockerfile
+  #   env_file:
+  #     - common.env
+  #   environment:
+  #     - ASPNETCORE_URLS=http://+:8080
+  #   ports:
+  #     - "5000:8080"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_started
+  #   networks:
+  #     - coin-net
+
+  migrator:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    container_name: coin_migrator
+    volumes:
+      - ./src:/src
+    command: >
+      bash -c "
+      echo 'Limpando artefatos do Windows...' &&
+      find /src -type d -name bin -exec rm -rf {} + &&
+      find /src -type d -name obj -exec rm -rf {} + &&
+      
+      echo 'Instalando EF Tool...' &&
+      dotnet tool install --global dotnet-ef &&
+      export PATH=\"$$PATH:/root/.dotnet/tools\" &&
+      
+      echo 'Restaurando dependencias (Linux)...' &&
+      dotnet restore /src/Worker.PriceProcessor/Worker.PriceProcessor.csproj &&
+      
+      echo 'Rodando Migration...' &&
+      dotnet ef database update --project /src/Core.Lib --startup-project /src/Worker.PriceProcessor --verbose
+      "
+    env_file:
+      - common.env
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - coin-net
 

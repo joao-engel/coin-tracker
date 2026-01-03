@@ -1,4 +1,5 @@
 using Core.Lib.Infra;
+using Core.Lib.Services;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
@@ -39,8 +40,10 @@ public class PriceWorker(ILogger<PriceWorker> logger, RabbitMQService rabbitServ
                 using (var scope = scopeFactory.CreateScope())
                 {
                     var historyService = scope.ServiceProvider.GetRequiredService<MarketHistoryService>();
+                    var cacheService = scope.ServiceProvider.GetRequiredService<PriceCacheService>();
 
                     await historyService.SavePrice(message);
+                    await cacheService.UpdatePrice(message);
                 }                    
 
                 await _channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false);

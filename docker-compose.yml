@@ -44,6 +44,11 @@ services:
       - "6379:6379"
     networks:
       - coin-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mongo:
     image: mongo:latest
@@ -115,29 +120,27 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     networks:
       - coin-net
 
-  # api-analytics:
-  #   image: coin-api-analytics
-  #   container_name: coin_api_analytics
-  #   build:
-  #     context: .
-  #     dockerfile: src/Api.Analytics/Dockerfile
-  #   env_file:
-  #     - common.env
-  #   environment:
-  #     - ASPNETCORE_URLS=http://+:8080
-  #   ports:
-  #     - "5000:8080"
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_started
-  #   networks:
-  #     - coin-net
+  api-analytics:
+    image: coin-api-analytics
+    container_name: coin_api_analytics
+    build:
+      context: .
+      dockerfile: src/Api.Analytics/Dockerfile
+    env_file:
+      - common.env
+    ports:
+      - "5000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - coin-net
 
   migrator:
     image: mcr.microsoft.com/dotnet/sdk:10.0

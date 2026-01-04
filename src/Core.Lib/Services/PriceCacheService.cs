@@ -24,7 +24,7 @@ public class PriceCacheService
 
         var db = _redis.GetDatabase();
 
-        string key = GetKey(price.Coin);
+        string key = GetKey(price.RoutingKey);
         string json = JsonSerializer.Serialize(price);
         await db.StringSetAsync(key, json, TimeSpan.FromSeconds(60));
     }

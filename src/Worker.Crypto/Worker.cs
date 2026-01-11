@@ -46,7 +46,7 @@ public class CryptoWorker : BackgroundService
                 _logger.LogError(ex, "Erro ao publicar mensagem");
             }
 
-            await Task.Delay(3000, stoppingToken);
+            await Task.Delay(15000, stoppingToken);
         }
     }
 }

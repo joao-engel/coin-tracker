@@ -46,4 +46,35 @@ public class TickerController : Controller
             throw;
         }
     }
+
+    [HttpGet("Stream")]
+    public async Task GetRealTime(CancellationToken cancellationToken)
+    {
+        Response.Headers.Append("Content-Type", "text/event-stream");
+        Response.Headers.Append("Cache-Control", "no-cache");
+        Response.Headers.Append("Connection", "keep-alive");
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            var prices = await _priceCacheService.GetAllPricesAsync();
+
+            if (prices.Count != 0)
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(prices);
+
+                await Response.WriteAsync($"data: {json}\n\n", cancellationToken);
+                await Response.Body.FlushAsync(cancellationToken);
+            }
+
+            try
+            {
+                await Task.Delay(15000, cancellationToken);
+
+            }
+            catch (TaskCanceledException)
+            {
+                break;
+            }
+        }
+    }
 }

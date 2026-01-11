@@ -11,6 +11,7 @@ public class Context(DbContextOptions<Context> options) : DbContext(options)
         modelBuilder.HasDefaultSchema("Crypto");
 
         modelBuilder.ApplyConfiguration(new MarketHistoryContext());
+        modelBuilder.ApplyConfiguration(new CryptoAssetContext());
 
         base.OnModelCreating(modelBuilder);
     }

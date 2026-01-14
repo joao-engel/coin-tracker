@@ -1,6 +1,8 @@
-﻿namespace Core.Lib.Domain.Entities;
+﻿using Core.Lib.Domain.Entities.Interfaces;
 
-public class CryptoAsset
+namespace Core.Lib.Domain.Entities;
+
+public class CryptoAsset : IEntity
 {
     public Guid Id { get; set; }
     public string Key { get; set; } = string.Empty;

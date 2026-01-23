@@ -1,4 +1,5 @@
 ﻿using Api.Management.Services.Crypto;
+using Api.Management.Services.Crypto.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Management.Controllers;
@@ -44,6 +45,56 @@ public class CryptoAssetController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Erro ao buscar crypto pelo id '{id}'");
+            throw;
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CryptoAssetInputDto inputDto)
+    {
+        try
+        {
+            return Ok(await _cryptoAssetService.Create(inputDto));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao criar crypto");
+            throw;
+        }
+    }
+
+    [HttpPatch("{id}/status")]
+    public async Task<IActionResult> ToggleStatus([FromRoute] Guid id, [FromBody] bool isActive)
+    {
+        try
+        {
+            return Ok(await _cryptoAssetService.ToggleStatus(id, isActive));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Erro ao desativar crypto pelo id '{id}'");
+            throw;
+        }
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] CryptoAssetPutDto dto)
+    {
+        try
+        {
+            return Ok(await _cryptoAssetService.Update(id, dto));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Erro ao atualizar crypto pelo id '{id}'");
             throw;
         }
     }

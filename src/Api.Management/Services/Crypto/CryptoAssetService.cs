@@ -29,4 +29,35 @@ public class CryptoAssetService
 
         return new CryptoAssetOutputDto(cryptoAsset);
     }
+
+    public async Task<CryptoAssetOutputDto> ToggleStatus(Guid id, bool isActive)
+    {
+        CryptoAsset entity = await _cryptoAssetRepository.GetByIdAsync(id)
+            ?? throw new KeyNotFoundException($"CryptoAsset com o id '{id}' não foi encontrada.");
+
+        entity.IsActive = isActive;
+        await _cryptoAssetRepository.UpdateAsync(entity);
+
+        return new CryptoAssetOutputDto(entity);
+    }
+
+    public async Task<CryptoAssetOutputDto> Create(CryptoAssetInputDto inputDto)
+    {
+        CryptoAsset entity = inputDto.ToDomain();
+
+        await _cryptoAssetRepository.AddAsync(entity);
+
+        return new CryptoAssetOutputDto(entity);
+    }
+
+    public async Task<CryptoAssetOutputDto> Update(Guid id, CryptoAssetPutDto dto)
+    {
+        CryptoAsset entity = await _cryptoAssetRepository.GetByIdAsync(id)
+            ?? throw new KeyNotFoundException($"CryptoAsset com o id '{id}' não foi encontrada.");
+
+        dto.UpdateDomain(entity);        
+        await _cryptoAssetRepository.UpdateAsync(entity);
+
+        return new CryptoAssetOutputDto(entity);
+    }
 }

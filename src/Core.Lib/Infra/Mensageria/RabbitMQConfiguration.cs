@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 
-namespace Core.Lib.Infra;
+namespace Core.Lib.Infra.Mensageria;
 public static class RabbitMQConfiguration
 {
     public static IServiceCollection AddRabbitMqConfiguration(this IServiceCollection services, IConfiguration configuration)

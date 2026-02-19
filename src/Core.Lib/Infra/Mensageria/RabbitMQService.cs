@@ -3,7 +3,7 @@ using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
 
-namespace Core.Lib.Infra;
+namespace Core.Lib.Infra.Mensageria;
 public class RabbitMQService
 {
     private readonly IConnection _conn;

@@ -1,4 +1,4 @@
-using Core.Lib.Infra;
+using Core.Lib.Infra.Mensageria;
 using Core.Lib.Services;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;

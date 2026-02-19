@@ -1,5 +1,5 @@
 using Core.Lib.Domain.Data;
-using Core.Lib.Infra;
+using Core.Lib.Infra.Mensageria;
 using Core.Lib.Services;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;

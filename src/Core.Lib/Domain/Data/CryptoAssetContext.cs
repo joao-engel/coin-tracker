@@ -1,5 +1,4 @@
-﻿using Core.Lib.Configuration;
-using Core.Lib.Domain.Entities;
+﻿using Core.Lib.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

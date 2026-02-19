@@ -1,5 +1,6 @@
 ﻿using Api.Management.Services.Crypto.DTOs;
 using Core.Lib.Domain.Entities;
+using Core.Lib.Infra.Cache;
 using Core.Lib.Repositories;
 
 namespace Api.Management.Services.Crypto;
@@ -7,10 +8,13 @@ namespace Api.Management.Services.Crypto;
 public class CryptoAssetService
 {
     private readonly Repository<CryptoAsset> _cryptoAssetRepository;
+    private readonly RedisService _redisService;
+    private readonly string KeyPrefix = "crypto:asset:";
 
-    public CryptoAssetService(Repository<CryptoAsset> cryptoAssetRepository)
+    public CryptoAssetService(Repository<CryptoAsset> cryptoAssetRepository, RedisService redisService)
     {
         _cryptoAssetRepository = cryptoAssetRepository;
+        _redisService = redisService;
     }
 
     public async Task<List<CryptoAssetOutputDto>> GetAll()
@@ -38,6 +42,8 @@ public class CryptoAssetService
         entity.IsActive = isActive;
         await _cryptoAssetRepository.UpdateAsync(entity);
 
+        await SaveCache(entity);
+
         return new CryptoAssetOutputDto(entity);
     }
 
@@ -46,6 +52,8 @@ public class CryptoAssetService
         CryptoAsset entity = inputDto.ToDomain();
 
         await _cryptoAssetRepository.AddAsync(entity);
+
+        await SaveCache(entity);
 
         return new CryptoAssetOutputDto(entity);
     }
@@ -58,6 +66,16 @@ public class CryptoAssetService
         dto.UpdateDomain(entity);        
         await _cryptoAssetRepository.UpdateAsync(entity);
 
+        await SaveCache(entity);
+
         return new CryptoAssetOutputDto(entity);
     }
+
+    private async Task SaveCache(CryptoAsset entity)
+    {
+        if (entity.IsActive)
+            await _redisService.SetAsync($"{KeyPrefix}{entity.Symbol}", entity);
+        else
+            await _redisService.RemoveAsync($"{KeyPrefix}{entity.Symbol}");        
+    }        
 }

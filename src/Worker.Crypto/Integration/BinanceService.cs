@@ -1,4 +1,4 @@
-﻿using Core.Lib.Configuration;
+﻿using Core.Lib.Domain.Entities;
 using Core.Lib.DTOs;
 using System.Text.Json;
 using Worker.Crypto.Integration.DTOs;
@@ -15,33 +15,34 @@ namespace Worker.Crypto.Integration
             _httpClient = httpClient;
         }
 
-        public async Task<List<PriceUpdateDto>> SearchCoins()
+        public async Task<List<PriceUpdateDto>> SearchCoins(List<CryptoAsset> activeCoins)
         {
             List<PriceUpdateDto> listCoins = [];
 
-            foreach (var coin in CryptoCatalog.Coins)
+            var coins = await GetPrices();
+            foreach (var coin in activeCoins)
             {
-                TicketOutputDto ticketOutputDto = await GetPrice(coin.Symbol);                
+                var binanceTicker = coins.FirstOrDefault(b => b.Symbol.Equals(coin.Symbol, StringComparison.OrdinalIgnoreCase));
 
-                listCoins.Add(new PriceUpdateDto(coin.DisplayName, coin.RoutingKey, ticketOutputDto.Price));
+                if (binanceTicker != null)                
+                    listCoins.Add(new PriceUpdateDto(coin.DisplayName, coin.Key, binanceTicker.Price));                
             }
 
             return listCoins;
         }
 
-        private async Task<TicketOutputDto> GetPrice(string symbolPair)
+        private async Task<List<TicketOutputDto>> GetPrices()
         {
-            HttpResponseMessage respose = await _httpClient.GetAsync($"ticker/price?symbol={symbolPair.ToUpper()}");
+            HttpResponseMessage respose = await _httpClient.GetAsync($"ticker/price");
 
             if (!respose.IsSuccessStatusCode)
-                throw new Exception($"Erro ao buscar {symbolPair}: {respose.StatusCode} - {respose.ReasonPhrase}");
+                throw new Exception($"Erro ao buscar cryptos: {respose.StatusCode} - {respose.ReasonPhrase}");
 
             string jsonResponse = await respose.Content.ReadAsStringAsync();
 
-            TicketOutputDto? ticket = JsonSerializer.Deserialize<TicketOutputDto>(jsonResponse, _jsonSerializerOptions);
+            List<TicketOutputDto>? tickets = JsonSerializer.Deserialize<List<TicketOutputDto>>(jsonResponse, _jsonSerializerOptions);
 
-            return ticket 
-                ?? throw new Exception($"Erro ao desserializar dados de preço da Binance para o símbolo {symbolPair}");
+            return tickets ?? [];
         }
     }
 }

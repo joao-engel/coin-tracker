@@ -103,6 +103,8 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     networks:
       - coin-net
 
@@ -138,6 +140,26 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+    networks:
+      - coin-net
+
+  api-management:
+    image: coin-api-management
+    container_name: coin_api_management
+    build:
+      context: .
+      dockerfile: src/Api.Management/Dockerfile
+    env_file:
+      - common.env
+    ports:
+      - "5001:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - coin-net
